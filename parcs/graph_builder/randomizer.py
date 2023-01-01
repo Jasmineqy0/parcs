@@ -162,9 +162,11 @@ class ParamRandomizer:
 class ExtendRandomizer(ParamRandomizer):
     def __init__(self,
                  graph_dir: Optional[Union[str, Path]] = None,
-                 guideline_dir: Optional[Union[str, Path]] = None):
+                 guideline_dir: Optional[Union[str, Path]] = None,
+                 do_correction=False):
         super().__init__(graph_dir=graph_dir, guideline_dir=guideline_dir)
-
+        # set correction setting of nodes
+        self.do_correction=do_correction
         # pick number of nodes:
         self.num_nodes = self._set_num_nodes()
         # pick names
@@ -229,14 +231,14 @@ class ExtendRandomizer(ParamRandomizer):
         adj_matrix = np.multiply(adj_matrix, mask)
         return pd.DataFrame(adj_matrix, columns=self.node_names, index=self.node_names)
 
-    def _extend_nodes(self, indices: np.ndarray):
+    def _extend_nodes(self, indices: np.ndarray, do_correction=True):
         for i in range(self.num_nodes):
             if i not in indices:
                 node_name = '{}_{}'.format(self.guideline['graph']['node_name_prefix'], i)
                 parents = sorted(list(self.adj_matrix[self.adj_matrix[node_name] == 1].index))
                 self.nodes.append({
                     'name': node_name,
-                    **parsers.node_parser('random', parents)
+                    **parsers.node_parser('random', parents, self.do_correction)
                 })
         return self
 

@@ -54,7 +54,7 @@ def equation_parser(eq, vars_):
     return eq
 
 
-def node_parser(line, parents):
+def node_parser(line, parents, do_correction=False):
     # preliminary: get order of interactions
     interactions_dict = get_interactions_dict(parents)
     # remove spaces
@@ -63,7 +63,7 @@ def node_parser(line, parents):
     if line == 'random':
         return {
             'output_distribution': '?',
-            'do_correction': True
+            'do_correction': do_correction
         }
     # check if data node
     try:
