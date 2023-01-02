@@ -18,6 +18,7 @@
 #
 #  Contact: alireza.zamanian@iks.fraunhofer.de
 
+from collections import OrderedDict
 from copy import deepcopy
 from parcs.cdag.mapping_functions import FUNCTION_PARAMS
 from parcs.graph_builder import parsers
@@ -25,7 +26,7 @@ from parcs.cdag.utils import get_interactions_length, topological_sort
 from itertools import product, combinations
 from parcs.graph_builder.utils import config_parser, config_dumper
 from parcs.cdag.output_distributions import OUTPUT_DISTRIBUTIONS, DISTRIBUTION_PARAMS
-from parcs.exceptions import parcs_assert, DataError
+from parcs.exceptions import parcs_assert, DataError, RandomizerError
 import pandas as pd
 import numpy as np
 import re
@@ -157,6 +158,34 @@ class ParamRandomizer:
         self._setup()
         return self.nodes, self.edges
 
+    def create_graph_config(self, filename):
+        ''' create graph description yml file for free randomization in spaceIV experiment setting
+            with no interaction, only linear and bias and gaussian distribution assumed.
+            input: 
+                filename: str, saved file name
+            output: 
+                saved yml configuration file as a result of free randomization
+        '''
+        parcs_assert(self.nodes and self.edges, DataError, f'The node and edges of graph should not be None: got {self.nodes} and {self.edges} instead')
+
+        node_config, edge_config = {}, {}
+
+        for node in self.nodes:
+            linear_coef = node['dist_params_coefs']['mu_']['linear'].tolist()
+            if linear_coef:
+                parent_inds = np.nonzero(linear_coef)[0].tolist()
+                mu_param = '+'.join([f"{linear_coef[i]}{self.nodes[i]['name']}" for i in parent_inds])
+            else:
+                mu_param = node['dist_params_coefs']['mu_']['bias']
+            params = f'*mu_={mu_param}, sigma_=1'
+            node_config[node['name']] = f"{node['output_distribution']}({params})"
+
+        for edge in self.edges:
+            params = ','.join(f'{key}={val}' for key, val in edge['function_params'].items())
+            edge_config[edge['name']] = f"{edge['function_name']}({params})"
+
+        configs = {** node_config, ** edge_config}
+        config_dumper(configs, filename)
 
 @typechecked
 class ExtendRandomizer(ParamRandomizer):
@@ -255,6 +284,9 @@ class ExtendRandomizer(ParamRandomizer):
     def _update_param_coefs(self):
         return self
 
+    def get_adj_matrix(self):
+        return self.adj_matrix
+
 
 @typechecked
 class FreeRandomizer(ExtendRandomizer):
@@ -269,7 +301,10 @@ class ConnectRandomizer(ParamRandomizer):
                  child_graph_dir: Optional[Union[str, Path]] = None,
                  guideline_dir: Optional[Union[str, Path]] = None,
                  adj_matrix_mask: pd.DataFrame = None,
-                 delete_temp_graph_description: bool = True):
+                 adj_matrix_restriction: pd.DataFrame = None,
+                 delete_temp_graph_description: bool = True,
+                 with_edge_correction = True,
+                 graph_description_path = 'combined_gdf.yml'):
         pgd = config_parser(parent_graph_dir)
         cgd = config_parser(child_graph_dir)
         n_p = [n for n in pgd if '->' not in n]
@@ -281,14 +316,22 @@ class ConnectRandomizer(ParamRandomizer):
         guideline = config_parser(guideline_dir)
 
         # sample connection adj_matrix
+        parcs_assert(adj_matrix_mask.values.shape == tuple((l_p, l_c)), DataError, \
+                            f'Expected adj_matrix_mask array size ({l_p},{l_c}), got {adj_matrix_mask.values.shape} instead' )
         density = self.directive_picker(guideline['graph']['graph_density'])
         adj_matrix = np.random.choice([0, 1], p=[1 - density, density], size=(l_p, l_c))
         adj_matrix = np.multiply(adj_matrix, adj_matrix_mask.values)
+        if adj_matrix_restriction is not None:
+            parcs_assert(adj_matrix_restriction.values.shape == tuple((l_p, l_c)), DataError, \
+                            f'Expected adj_matrix_restriction array size ({l_p},{l_c}), got {adj_matrix_restriction.values.shape} instead' )
+            adj_matrix = np.logical_or(adj_matrix, adj_matrix_restriction.values).astype(int)
         adj_matrix = pd.DataFrame(adj_matrix, index=adj_matrix_mask.index, columns=adj_matrix_mask.columns)
+
         # make additional edges
         e_opt = list(guideline['edges'].keys())
+        correct_term = ', correction[]' if with_edge_correction else ''
         add_edges = {
-            '{}->{}'.format(p, c): '{}(?), correction[]'.format(np.random.choice(e_opt))
+            f'{p}->{c}': f"{format(np.random.choice(e_opt))}(?){correct_term}"
             for p, c in product(n_p, n_c) if adj_matrix.loc[p, c] == 1
         }
         # modify receiving child nodes
@@ -339,10 +382,10 @@ class ConnectRandomizer(ParamRandomizer):
             arg = ','.join(params)
             cgd[n] = '{}({}){}'.format(dist, arg, rest)
         gd = {**cgd, **pgd, **add_edges}
-        config_dumper(gd, 'combined_gdf.yml')
-        super().__init__(graph_dir='combined_gdf.yml', guideline_dir=guideline_dir)
+        config_dumper(gd, graph_description_path)
+        super().__init__(graph_dir=graph_description_path, guideline_dir=guideline_dir)
         if delete_temp_graph_description:
-            os.remove('combined_gdf.yml')
+            os.remove(graph_description_path)
 
 
 @typechecked
