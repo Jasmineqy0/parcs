@@ -31,7 +31,7 @@ def config_parser(dir_):
 
 def config_dumper(dict_, dir_):
     with open(dir_, 'w') as outfile:
-        yaml.dump(dict_, outfile, default_flow_style=False)
+        yaml.dump(dict_, outfile, default_flow_style=False, sort_keys=False)
 
 
 def dist_param_coefs_reader(obj, dist):
