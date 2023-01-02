@@ -18,7 +18,6 @@
 #
 #  Contact: alireza.zamanian@iks.fraunhofer.de
 
-from collections import OrderedDict
 from copy import deepcopy
 from parcs.cdag.mapping_functions import FUNCTION_PARAMS
 from parcs.graph_builder import parsers
@@ -26,7 +25,7 @@ from parcs.cdag.utils import get_interactions_length, topological_sort
 from itertools import product, combinations
 from parcs.graph_builder.utils import config_parser, config_dumper
 from parcs.cdag.output_distributions import OUTPUT_DISTRIBUTIONS, DISTRIBUTION_PARAMS
-from parcs.exceptions import parcs_assert, DataError, RandomizerError
+from parcs.exceptions import parcs_assert, DataError
 import pandas as pd
 import numpy as np
 import re
