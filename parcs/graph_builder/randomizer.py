@@ -157,7 +157,7 @@ class ParamRandomizer:
         self._setup()
         return self.nodes, self.edges
 
-    def create_graph_config(self, filename):
+    def create_graph_config(self, filename: str):
         ''' create graph description yml file for free randomization in spaceIV experiment setting
             with no interaction, only linear and bias and gaussian distribution assumed.
             input: 
@@ -166,6 +166,7 @@ class ParamRandomizer:
                 saved yml configuration file as a result of free randomization
         '''
         parcs_assert(self.nodes and self.edges, DataError, f'The node and edges of graph should not be None: got {self.nodes} and {self.edges} instead')
+        parcs_assert(filename.endswith('.yml'), DataError, f'the filename should end with .yml, got {filename} insted')
 
         node_config, edge_config = {}, {}
 
@@ -330,7 +331,7 @@ class ConnectRandomizer(ParamRandomizer):
         e_opt = list(guideline['edges'].keys())
         correct_term = ', correction[]' if with_edge_correction else ''
         add_edges = {
-            f'{p}->{c}': f"{format(np.random.choice(e_opt))}(?){correct_term}"
+            f'{p}->{c}': f"{np.random.choice(e_opt)}(?){correct_term}"
             for p, c in product(n_p, n_c) if adj_matrix.loc[p, c] == 1
         }
         # modify receiving child nodes
