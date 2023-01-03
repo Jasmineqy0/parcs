@@ -21,6 +21,7 @@
 import yaml
 import numpy as np
 from parcs.cdag.output_distributions import DISTRIBUTION_PARAMS
+from typing import Dict
 
 
 def config_parser(dir_):
@@ -33,6 +34,10 @@ def config_dumper(dict_, dir_):
     with open(dir_, 'w') as outfile:
         yaml.dump(dict_, outfile, default_flow_style=False, sort_keys=False)
 
+def config_append(dict_: Dict, dir_: str):
+    cur_yaml = config_parser(dir_)
+    cur_yaml.update(dict_)
+    config_dumper(cur_yaml, dir_)
 
 def dist_param_coefs_reader(obj, dist):
     given_params = obj.keys()
