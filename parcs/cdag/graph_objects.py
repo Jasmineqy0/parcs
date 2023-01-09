@@ -345,7 +345,8 @@ class Graph:
     def __init__(self,
                  nodes: List[dict],
                  edges: List[dict],
-                 dummy_node_prefix: str = 'dummy_'):
+                 dummy_node_prefix: str = 'dummy_',
+                 no_correction: bool = True):
         self.nodes: dict = {
             kwargs['name']: Node(**kwargs) if 'output_distribution' in kwargs
             else DetNode(**kwargs) if 'function' in kwargs
@@ -366,7 +367,8 @@ class Graph:
 
         # one-time sample to setup corrections
         # TODO: don't do it if no correction=True
-        self.sample(size=500)
+        if not no_correction:
+            self.sample(size=500)
 
     def get_info(self, report_type: str = 'raw', info_dir: Optional[Union[str, Path]] = None):
         """ **getting nodes and edges information**

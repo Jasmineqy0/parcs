@@ -19,6 +19,7 @@
 #  Contact: alireza.zamanian@iks.fraunhofer.de
 
 from copy import deepcopy
+import logging
 from parcs.cdag.mapping_functions import FUNCTION_PARAMS
 from parcs.graph_builder import parsers
 from parcs.cdag.utils import get_interactions_length, topological_sort
@@ -260,7 +261,7 @@ class ExtendRandomizer(ParamRandomizer):
         adj_matrix = np.multiply(adj_matrix, mask)
         return pd.DataFrame(adj_matrix, columns=self.node_names, index=self.node_names)
 
-    def _extend_nodes(self, indices: np.ndarray, do_correction=True):
+    def _extend_nodes(self, indices: np.ndarray):
         for i in range(self.num_nodes):
             if i not in indices:
                 node_name = '{}_{}'.format(self.guideline['graph']['node_name_prefix'], i)
@@ -283,9 +284,6 @@ class ExtendRandomizer(ParamRandomizer):
 
     def _update_param_coefs(self):
         return self
-
-    def get_adj_matrix(self):
-        return self.adj_matrix
 
 
 @typechecked
@@ -326,6 +324,7 @@ class ConnectRandomizer(ParamRandomizer):
                             f'Expected adj_matrix_restriction array size ({l_p},{l_c}), got {adj_matrix_restriction.values.shape} instead' )
             adj_matrix = np.logical_or(adj_matrix, adj_matrix_restriction.values).astype(int)
         adj_matrix = pd.DataFrame(adj_matrix, index=adj_matrix_mask.index, columns=adj_matrix_mask.columns)
+        self.adj_matrix = adj_matrix
 
         # make additional edges
         e_opt = list(guideline['edges'].keys())
@@ -386,6 +385,9 @@ class ConnectRandomizer(ParamRandomizer):
         super().__init__(graph_dir=graph_description_path, guideline_dir=guideline_dir)
         if delete_temp_graph_description:
             os.remove(graph_description_path)
+
+    def get_adj_matrix(self):
+        return self.adj_matrix
 
 
 @typechecked
