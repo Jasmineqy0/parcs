@@ -158,7 +158,7 @@ class ParamRandomizer:
         self._setup()
         return self.nodes, self.edges
 
-    def create_graph_config(self, filename: str, dist: str, do_max_norm: bool=True):
+    def create_graph_config(self, filename: str, dist: str, do_max_norm: bool=True, error_mu: float=0, error_sigma_diff: float=1):
         ''' create graph description yml file for free randomization in spaceIV experiment setting
             with no interaction, only linear and bias and gaussian distribution assumed.
             input: 
@@ -174,16 +174,16 @@ class ParamRandomizer:
         for node in self.nodes:
             linear_coef = node['dist_params_coefs']['mu_']['linear']
             non_zero_coef = np.nonzero(linear_coef)[0].size
-            mu_param = '0'
+            mu_param = str(error_mu)
             if linear_coef.size > 0:
                 parent_inds = np.nonzero(linear_coef)[0].tolist()
                 if do_max_norm:
                     linear_coef = linear_coef / max(non_zero_coef, 1)
                 mu_param += '+' + '+'.join([f"{linear_coef[i]}{self.nodes[i]['name']}" for i in parent_inds])
             if dist == 'gaussian':
-                params = f'*mu_={mu_param}, sigma_=1'
+                params = f'*mu_={mu_param}, sigma_={error_sigma_diff}'
             elif dist == 'uniform':
-                params = f'*mu_={mu_param}, diff_=1'
+                params = f'*mu_={mu_param}, diff_={error_sigma_diff}'
             else:
                 assert False, 'distribution not found'
             node_config[node['name']] = f"{node['output_distribution']}({params})"
