@@ -172,13 +172,13 @@ class ParamRandomizer:
         node_config, edge_config = {}, {}
 
         for node in self.nodes:
-            linear_coef = node['dist_params_coefs']['mu_']['linear'].tolist()
-            non_zero_coef = len(list(filter(lambda x: x!=0, linear_coef)))
+            linear_coef = node['dist_params_coefs']['mu_']['linear']
+            non_zero_coef = np.nonzero(linear_coef)[0].size
             mu_param = '0'
-            if linear_coef:
+            if linear_coef.size > 0:
                 parent_inds = np.nonzero(linear_coef)[0].tolist()
                 if do_max_norm:
-                    linear_coef = list(map(lambda x: x  / max(non_zero_coef, 1), linear_coef))
+                    linear_coef = linear_coef / max(non_zero_coef, 1)
                 mu_param += '+' + '+'.join([f"{linear_coef[i]}{self.nodes[i]['name']}" for i in parent_inds])
             params = f'*mu_={mu_param}, sigma_=1'
             node_config[node['name']] = f"{node['output_distribution']}({params})"
