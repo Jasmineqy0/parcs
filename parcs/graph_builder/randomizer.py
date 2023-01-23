@@ -158,7 +158,7 @@ class ParamRandomizer:
         self._setup()
         return self.nodes, self.edges
 
-    def create_graph_config(self, filename: str):
+    def create_graph_config(self, filename: str, do_max_norm: bool=True):
         ''' create graph description yml file for free randomization in spaceIV experiment setting
             with no interaction, only linear and bias and gaussian distribution assumed.
             input: 
@@ -173,11 +173,13 @@ class ParamRandomizer:
 
         for node in self.nodes:
             linear_coef = node['dist_params_coefs']['mu_']['linear'].tolist()
+            non_zero_coef = len(list(filter(lambda x: x!=0, linear_coef)))
+            mu_param = '0'
             if linear_coef:
                 parent_inds = np.nonzero(linear_coef)[0].tolist()
-                mu_param = '+'.join([f"{linear_coef[i]}{self.nodes[i]['name']}" for i in parent_inds])
-            else:
-                mu_param = node['dist_params_coefs']['mu_']['bias']
+                if do_max_norm:
+                    linear_coef = list(map(lambda x: x  / max(non_zero_coef, 1), linear_coef))
+                mu_param += '+' + '+'.join([f"{linear_coef[i]}{self.nodes[i]['name']}" for i in parent_inds])
             params = f'*mu_={mu_param}, sigma_=1'
             node_config[node['name']] = f"{node['output_distribution']}({params})"
 
