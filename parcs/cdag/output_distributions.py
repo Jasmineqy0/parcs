@@ -149,7 +149,7 @@ class UniformDistribution:
         diff_ = dot_prod(data, self.coefs['diff_'])
         low = mu_ - (diff_ / 2)
 
-        samples = errors * diff_ + low
+        samples = np.array(errors * diff_ + low)
 
         return samples
 
