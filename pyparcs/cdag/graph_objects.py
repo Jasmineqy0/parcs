@@ -58,7 +58,7 @@ class Node:
         first-level keys are names of parameter distributions.
         for each parameter, three *bias*, *linear* and *interactions* key are given.
         The bias value is a float, while linear and interaction values are numpy arrays.
-    parents: List[str]
+    linear_parents: List[str]
         the parents of the nodes
     """
 
@@ -66,7 +66,7 @@ class Node:
                  name: Optional[str],
                  output_distribution: str,
                  dist_params_coefs: dict,
-                 parents: List[str],
+                 linear_parents: List[str],
                  do_correction: bool = False,
                  correction_config=None):
         if correction_config is None:
@@ -79,7 +79,7 @@ class Node:
             'node_type': 'stochastic',
             'output_distribution': output_distribution,
             'dist_params_coefs': dist_params_coefs,
-            'parents': parents
+            'linear_parents': linear_parents
         }
         self.output_distribution = OUTPUT_DISTRIBUTIONS[output_distribution](
             correction_config=correction_config,

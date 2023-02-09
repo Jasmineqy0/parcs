@@ -69,7 +69,7 @@ def term_parser(term: str, vars_: List[str]) -> Tuple[list, float]:
             term = term[0:inds[0]] + term[inds[1]:]
             break  # do not check other variables because we cannot have 'YX^2'
         # it's not quadratic. check other possibilities
-        res = re.search(r'{}'.format(var), term)
+        res = re.search(r'{}$'.format(var), term)
         if res is not None:
             inds = res.span(0)
             pars.append(var)
@@ -104,22 +104,24 @@ def equation_parser(eq: str, vars_: List[str]) -> List[Tuple[List[str], float]]:
     # 0. remove spaces
     eq = eq.replace(' ', '')
     # 1. we split by +, so negative terms are + - ...
+    parcs_assert('+-' not in eq, 
+                DescriptionFileError, '+- sigh exists in equation, should be replaced with -')
     eq = eq.replace('-', '+-')
     if eq[0] == '+':
         eq = eq[1:]
     eq = eq.split('+')
-    # 2. split by vars
-    eq = [term_parser(term, vars_) for term in eq]
+    # 2. split by vars and parse each term
+    parsed_eq = [term_parser(term, vars_) for term in eq]
     # 3. check for duplicates
-    parents = [frozenset(e[0]) for e in eq]
+    parents = [frozenset(e[0]) for e in parsed_eq]
     parcs_assert(len(set(parents)) == len(parents),
-                 DescriptionFileError, "Duplicated terms exist in equation {}".format(eq))
+                 DescriptionFileError, "Duplicated terms exist in equation {}".format(parsed_eq))
 
-    return eq
+    return parsed_eq
 
 
 @typechecked
-def node_parser(line: str, parents: List[str]) -> dict:
+def node_parser(line: str, parents: List[str], do_correction=False) -> dict:
     """
     Parses a line in graph description file, and gives the appropriate dictionary to initiate a node. Keys are
     - for stochastic node: 'output_distribution', 'dist_params_coefs', 'do_correction', 'correction_config'
@@ -258,6 +260,7 @@ def node_parser(line: str, parents: List[str]) -> dict:
         params[p] = {
             'bias': 0,
             'linear': np.zeros(shape=(len(parents, ))),
+            'linear_parents': [None] * len(parents),
             'interactions': np.zeros(shape=get_interactions_length(len(parents)), )
         }
 
@@ -268,6 +271,7 @@ def node_parser(line: str, parents: List[str]) -> dict:
             elif len(pars) == 1:
                 ind = parents.index(pars[0])
                 params[p]['linear'][ind] = coef
+                params[p]['linear_parents'][ind] = pars[0]
             else:
                 ind = interactions_dict.index(sorted(pars))
                 params[p]['interactions'][ind] = coef
