@@ -20,10 +20,10 @@
 
 import re
 import numpy as np
-from parcs.graph_builder.utils import config_parser
+from pyparcs.graph_builder.utils import config_parser
 from parcs.cdag.output_distributions import DISTRIBUTION_PARAMS
-from parcs.cdag.mapping_functions import EDGE_FUNCTIONS, FUNCTION_PARAMS
-from parcs.cdag.utils import get_interactions_length, get_interactions_dict
+from pyparcs.cdag.mapping_functions import EDGE_FUNCTIONS, FUNCTION_PARAMS
+from pyparcs.cdag.utils import get_interactions_length, get_interactions_dict
 
 
 def term_parser(term, vars_):
