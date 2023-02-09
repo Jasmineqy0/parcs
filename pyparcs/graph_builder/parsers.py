@@ -68,9 +68,9 @@ def term_parser(term: str, vars_: List[str]) -> Tuple[list, float]:
             pars = [var, var]
             term = term[0:inds[0]] + term[inds[1]:]
             break  # do not check other variables because we cannot have 'YX^2'
-        # it's not quadratic. check other possibilities
-        res = re.search(r'{}$'.format(var), term)
-        if res is not None:
+        # it's not quadratic. check other possibilities   
+        res = re.search(f'{var}(?!\d+)', term)
+        if res:
             inds = res.span(0)
             pars.append(var)
             term = term[0:inds[0]] + term[inds[1]:]
