@@ -27,6 +27,7 @@ from pyparcs.cdag.utils import get_interactions_length, get_interactions_dict
 from pyparcs.exceptions import *
 from typeguard import typechecked
 from typing import List, Tuple
+from importlib.machinery import SourceFileLoader
 
 
 @typechecked
@@ -195,16 +196,29 @@ def node_parser(line: str, parents: List[str], do_correction=False) -> dict:
         res = det_pattern.search(line)
         directory = res.group(1)
         assert directory[-3:] == '.py'
-        directory = directory[:-3]
+        # directory = directory[:-3]
+        module_name = directory.split('/')[-1][:-3]
         function_name = res.group(2)
+
         try:
-            function_file = __import__(directory)
+            module = SourceFileLoader(module_name, directory).load_module()
         except ModuleNotFoundError:
             raise ExternalResourceError('Python script {} containing the function does not exist.'.format(directory))
+        
         try:
-            function = getattr(function_file, function_name)
+            function = getattr(module, function_name)
         except AttributeError:
             raise ExternalResourceError('Python function {} not existing in script {}'.format(function_name, directory))
+
+        # try:
+        #     function_file = __import__(directory)
+        # except ModuleNotFoundError:
+        #     raise ExternalResourceError('Python script {} containing the function does not exist.'.format(directory))
+        # try:
+        #     function = getattr(function_file, function_name)
+        # except AttributeError:
+        #     raise ExternalResourceError('Python function {} not existing in script {}'.format(function_name, directory))
+        
         return {
             'function': function
         }

@@ -35,7 +35,7 @@ REPORT_TYPES = ['md', 'raw']
 
 
 @typechecked
-class Node:
+class  Node:
     """ **Node object in causal DAGs**
 
     Use this class to create a node, independent of any graphs.
@@ -66,7 +66,6 @@ class Node:
                  name: Optional[str],
                  output_distribution: str,
                  dist_params_coefs: dict,
-                 linear_parents: List[str],
                  do_correction: bool = False,
                  correction_config=None):
         if correction_config is None:
@@ -79,7 +78,6 @@ class Node:
             'node_type': 'stochastic',
             'output_distribution': output_distribution,
             'dist_params_coefs': dist_params_coefs,
-            'linear_parents': linear_parents
         }
         self.output_distribution = OUTPUT_DISTRIBUTIONS[output_distribution](
             correction_config=correction_config,
@@ -154,9 +152,9 @@ class DetNode:
         return self.info
 
     @typechecked
-    def calculate(self, data: pd.DataFrame):
+    def calculate(self, data: pd.DataFrame, parents: List[str]):
         try:
-            return self.function(data).values
+            return self.function(data)
         except KeyError:
             raise ExternalResourceError("assumed parent names for node")
 
@@ -186,7 +184,7 @@ class ConstNode:
     """
 
     def __init__(self,
-                 value: Union[np.number, np.int, float],
+                 value: Union[np.number, int, float],
                  name: Optional[str] = None):
         self.name = name
         self.info = {'node_type': 'constant', 'value': value}
@@ -277,7 +275,7 @@ class Edge:
     def __init__(self,
                  function_name: str,
                  function_params: dict = {},
-                 do_correction=False,
+                 do_correction: bool=False,
                  name: Optional[str] = None):
         parcs_assert(function_name in EDGE_FUNCTIONS_KEYS, DistributionError,
                      f'function_name should be in f{EDGE_FUNCTIONS_KEYS}, got {function_name} instead')
@@ -355,7 +353,7 @@ class Graph:
                  nodes: List[dict],
                  edges: List[dict],
                  dummy_node_prefix: str = 'dummy_',
-                 no_correction: bool = True):
+                 do_correction: bool = False):
         self.nodes: dict = {
             kwargs['name']: Node(**kwargs) if 'output_distribution' in kwargs
             else DetNode(**kwargs) if 'function' in kwargs
@@ -375,8 +373,8 @@ class Graph:
         self.cache = {}
 
         # one-time sample to setup corrections
-        # TODO: don't do it if no correction=True
-        if not no_correction:
+        # TODO: don't do it if do_correction=False
+        if do_correction:
             self.sample(size=500)
 
     def get_info(self, report_type: str = 'raw', info_dir: Optional[Union[str, Path]] = None):

@@ -132,7 +132,7 @@ class ParamRandomizer:
                             self.directive_picker(self.guideline['nodes'][dist][param][2])
                             for _ in range(num_interactions)
                         ])
-                node['linear_parents'] = self.nodes_parents[node['name']]
+                    node['dist_params_coefs'][param]['linear_parents'] = self.nodes_parents[node['name']]
             except AssertionError:
                 continue
         return self
