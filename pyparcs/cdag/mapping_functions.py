@@ -182,17 +182,36 @@ def edge_identity(array: np.ndarray = None) -> np.ndarray:
     """
     return array
 
+@typechecked
+def edge_quadratic(array: np.ndarray = None) -> np.ndarray:
+    r"""
+
+    .. math::
+        z^*_i = z_i^2
+
+    Parameters
+    ----------
+    array
+
+    Returns
+    -------
+
+    """
+    return array**2
+
 
 EDGE_FUNCTIONS = {
     'identity': edge_identity,
     'sigmoid': edge_sigmoid,
     'gaussian_rbf': edge_gaussian_rbf,
-    'arctan': edge_arctan
+    'arctan': edge_arctan,
+    'quadratic': edge_quadratic,
 }
 
 FUNCTION_PARAMS = {
     'identity': [],
     'sigmoid': ['alpha', 'beta', 'gamma', 'tau'],
     'gaussian_rbf': ['alpha', 'beta', 'gamma', 'tau'],
-    'arctan': ['alpha', 'beta', 'gamma']
+    'arctan': ['alpha', 'beta', 'gamma'],
+    'quadratic': [],
 }
