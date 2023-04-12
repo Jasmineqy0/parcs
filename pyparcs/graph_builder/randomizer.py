@@ -32,7 +32,7 @@ import re
 import os
 import warnings
 from pathlib import Path
-from typing import Union, Optional, Iterable
+from typing import List, Union, Optional, Iterable
 from typeguard import typechecked
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -374,7 +374,7 @@ def guideline_iterator(guideline_dir: Optional[Union[str, Path]] = None, to_iter
         #     raise ValueError
 
     @typechecked
-    def _get_directive(dict_: dict, path: list[str]):
+    def _get_directive(dict_: dict, path: List[str]):
         directive = dict_[path[0]]
         if len(path) == 1:
             return directive
@@ -383,7 +383,7 @@ def guideline_iterator(guideline_dir: Optional[Union[str, Path]] = None, to_iter
         return directive
 
     @typechecked
-    def _set_directive(dict_: dict, path: list[str], value: Union[np.float, float, int]):
+    def _set_directive(dict_: dict, path: List[str], value: Union[np.float, float, int]):
         new_guideline = deepcopy(dict_)
         if isinstance(value, np.float):
             value = float(value)
@@ -396,7 +396,7 @@ def guideline_iterator(guideline_dir: Optional[Union[str, Path]] = None, to_iter
         return new_guideline
 
     @typechecked
-    def _generator(dict_: dict, iterable: Iterable, path: list[str], repeat: int):
+    def _generator(dict_: dict, iterable: Iterable, path: List[str], repeat: int):
         for i in iterable:
             for epoch in range(repeat):
                 new_guideline = _set_directive(dict_, path, i)
