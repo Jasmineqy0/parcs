@@ -28,6 +28,7 @@ from pyparcs.exceptions import *
 from typeguard import typechecked
 from typing import List, Tuple
 from importlib.machinery import SourceFileLoader
+import os
 
 
 @typechecked
@@ -199,9 +200,8 @@ def node_parser(line: str, parents: List[str], do_correction=False) -> dict:
         # directory = directory[:-3]
         module_name = directory.split('/')[-1][:-3]
         function_name = res.group(2)
-
         try:
-            module = SourceFileLoader(module_name, directory).load_module()
+            module = SourceFileLoader(module_name, os.path.join(os.getcwd(), directory)).load_module()
         except ModuleNotFoundError:
             raise ExternalResourceError('Python script {} containing the function does not exist.'.format(directory))
         
