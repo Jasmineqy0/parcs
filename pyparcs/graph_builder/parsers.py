@@ -115,7 +115,7 @@ def equation_parser(eq: str, vars_: List[str]) -> List[Tuple[List[str], float]]:
     # 2. split by vars and parse each term
     parsed_eq = [term_parser(term, vars_) for term in eq]
     # 3. check for duplicates
-    parents = [frozenset(e[0]) for e in parsed_eq]
+    parents = [tuple(sorted(e[0])) for e in parsed_eq]
     parcs_assert(len(set(parents)) == len(parents),
                  DescriptionFileError, "Duplicated terms exist in equation {}".format(parsed_eq))
 
@@ -287,7 +287,7 @@ def node_parser(line: str, parents: List[str], do_correction=False) -> dict:
                 params[p]['linear'][ind] = coef
                 params[p]['linear_parents'][ind] = pars[0]
             else:
-                ind = interactions_dict.index(sorted(pars))
+                ind = interactions_dict.index(sorted(pars)) # sorted interactions coefs based on parents' names
                 params[p]['interactions'][ind] = coef
 
     # do correction

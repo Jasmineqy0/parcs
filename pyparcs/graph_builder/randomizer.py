@@ -53,7 +53,7 @@ class ParamRandomizer:
         if isinstance(directive, list):
             if directive[0] == 'choice':
                 options = directive[1:]
-                return np.random.choice(options)
+                return int(np.random.choice(options))
             else:
                 ranges = directive[1:]
                 # if multiple ranges are given

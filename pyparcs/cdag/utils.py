@@ -375,4 +375,5 @@ class EdgeCorrection:
             self.config['scale'] = array.std()
             self.is_initialized = True
 
-        return (array - self.config['offset']) / self.config['scale']
+        return np.divide(array - self.config['offset'],  self.config['scale'], 
+                         out=np.zeros_like(array - self.config['offset']), where=self.config['scale']!=0)

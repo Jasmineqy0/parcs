@@ -425,7 +425,7 @@ class Graph:
                 raise ValueError('node {} is DataNode but has parents in graph'.format(n))
 
     def _single_sample_round(self, node_name: str, data: pd.DataFrame, sampled_errors: pd.DataFrame):
-        # transform parents by edges
+        # transform parents by edges (with transformation functions)
         inputs = pd.DataFrame({
             parent: self.edges['{}->{}'.format(parent, node_name)].map(array=data[parent].values)
             for parent in self.parent_sets[node_name]
